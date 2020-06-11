@@ -1,3 +1,2 @@
 /home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles/myslam.dir
 /home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles/edit_cache.dir

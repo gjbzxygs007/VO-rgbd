@@ -1,6 +1,27 @@
 cmake_minimum_required(VERSION 3.16)
-project(myslam)
+project(myslam VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(myslam main.cpp)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+# Dependencies to third party libraries
+include_directories("/usr/include/eigen3")
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+find_package(Sophus REQUIRED)
+include_directories(${Sophus_INCLUDE_DIRS})
+find_package(G2O REQUIRED)
+include_directories(${G2O_INCLUDE_DIRS})
+
+set(THIRD_PARTY_LIBS
+        ${OpenCV_LIBS}
+        ${Sophus_LIBRARIES}
+        g2o_core g2o_stuff g2o_types_sba
+        )
+
+include_directories(${PROJECT_SOURCE_DIR}/include)
+add_subdirectory(src)
+add_subdirectory(test)
