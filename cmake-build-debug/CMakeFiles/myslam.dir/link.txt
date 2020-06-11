@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/myslam.dir/main.cpp.o  -o myslam 
