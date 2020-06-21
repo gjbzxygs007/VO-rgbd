@@ -18,9 +18,10 @@ namespace slamrgbd {
 
         public:
         typedef shared_ptr<MapPoint> Ptr;
-        MapPoint() : id_(-1), pos_(Vector3d(0, 0, 0)), norm_(Vector3d(0, 0, 0)), observed_times_(0), corrent_times_(0) {};
+        MapPoint() : id_(-1), pos_(Vector3d(0, 0, 0)), norm_(Vector3d(0, 0, 0)), observed_times_(0), correct_times_(0) {};
         MapPoint(long id, Vector3d position, Vector3d norm);
 
+        inline unsigned long GetId() {return id_;}
         static MapPoint::Ptr CreateMapPoint();
     };
     class Frame;

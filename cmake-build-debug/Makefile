@@ -113,6 +113,32 @@ depend:
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
+#=============================================================================
+# Target rules for targets named slamrgbd
+
+# Build rule for target.
+slamrgbd: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 slamrgbd
+.PHONY : slamrgbd
+
+# fast build rule for target.
+slamrgbd/fast:
+	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/slamrgbd.dir/build.make src/CMakeFiles/slamrgbd.dir/build
+.PHONY : slamrgbd/fast
+
+#=============================================================================
+# Target rules for targets named run_vo
+
+# Build rule for target.
+run_vo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 run_vo
+.PHONY : run_vo
+
+# fast build rule for target.
+run_vo/fast:
+	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/build
+.PHONY : run_vo/fast
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -121,6 +147,8 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... slamrgbd"
+	@echo "... run_vo"
 .PHONY : help
 
 
