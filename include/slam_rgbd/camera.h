@@ -12,7 +12,7 @@ namespace slamrgbd {
         float fx_, fy_, cx_, cy_, depth_scale_; //camera intrinsics
     public:
         typedef shared_ptr<Camera> Ptr;
-        Camera() = default;
+        Camera();
         Camera(float fx, float fy, float cx, float cy, float depth_scale = 0) : fx_ ( fx ), fy_ ( fy ), cx_ ( cx ), cy_ ( cy ), depth_scale_ ( depth_scale ) {}
         // Transformation between coordinate systems
         inline float GetDepthScale() {return depth_scale_; }

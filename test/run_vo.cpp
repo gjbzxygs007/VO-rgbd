@@ -61,7 +61,7 @@ int main ( int argc, char** argv ) {
     vis.showWidget( "Camera", camera_coor );
 
     cout<<"read total "<<rgb_files.size() <<" entries"<<endl;
-    for ( int i = 0; i < 1; i++ )
+    for ( int i = 0; i < rgb_files.size(); i++ )
     {
         Mat color = cv::imread ( rgb_files[i] );
         Mat depth = cv::imread ( depth_files[i], -1 );
@@ -73,8 +73,6 @@ int main ( int argc, char** argv ) {
         pFrame->GetColor() = color;
         pFrame->GetDepth() = depth;
         pFrame->SetTime(rgb_times[i]);
-        cout << "Pframe" << pFrame->GetCamera() << endl;
-
 
 
         boost::timer timer;
@@ -98,7 +96,7 @@ int main ( int argc, char** argv ) {
         );
 
         cv::imshow("image", color );
-        cv::waitKey();
+        cv::waitKey(2);
 
         vis.setWidgetPose( "Camera", M);
         vis.spinOnce(1, false);
