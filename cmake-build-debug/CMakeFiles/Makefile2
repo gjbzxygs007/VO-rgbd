@@ -116,12 +116,12 @@ test/clean: test/CMakeFiles/run_vo.dir/clean
 src/CMakeFiles/slamrgbd.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/slamrgbd.dir/build.make src/CMakeFiles/slamrgbd.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/slamrgbd.dir/build.make src/CMakeFiles/slamrgbd.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles --progress-num=3,4,5,6,7,8,9 "Built target slamrgbd"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles --progress-num=3,4,5,6,7,8,9,10 "Built target slamrgbd"
 .PHONY : src/CMakeFiles/slamrgbd.dir/all
 
 # Build rule for subdir invocation for target.
 src/CMakeFiles/slamrgbd.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/slamrgbd.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles 0
 .PHONY : src/CMakeFiles/slamrgbd.dir/rule
@@ -148,7 +148,7 @@ test/CMakeFiles/run_vo.dir/all: src/CMakeFiles/slamrgbd.dir/all
 
 # Build rule for subdir invocation for target.
 test/CMakeFiles/run_vo.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles 9
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles 10
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test/CMakeFiles/run_vo.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu-jianan/VSLAM/myslam/cmake-build-debug/CMakeFiles 0
 .PHONY : test/CMakeFiles/run_vo.dir/rule

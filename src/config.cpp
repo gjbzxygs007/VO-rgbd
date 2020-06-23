@@ -3,11 +3,17 @@
 //
 
 #include "slam_rgbd/config.h"
+#include <mutex>
 
+mutex mu;
 namespace slamrgbd {
     void Config::SetParameterFile(const string & filename) {
         if (config_ == NULL) {
-            config_ = shared_ptr<Config>(new Config());
+            lock_guard<mutex> guard(mu);
+            if (config_ ==NULL) {
+                Config * temp = new Config();
+                config_ = temp;
+            }
         }
         config_->file_ = cv::FileStorage(filename.c_str(), cv::FileStorage::READ);
         if (config_->file_.isOpened() == false) {
@@ -21,8 +27,12 @@ namespace slamrgbd {
         if (file_.isOpened()) {
             file_.release();
         }
+        if (config_ != NULL) {
+            delete config_;
+        }
     }
 
-    shared_ptr<Config> Config::config_ = NULL;
+    Config * Config::config_ = NULL;
+
 }
 

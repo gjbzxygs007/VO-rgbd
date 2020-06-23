@@ -17,11 +17,11 @@ namespace slamrgbd {
             LOST
         };
     private:
-        VOState state_;
-        Map::Ptr map_;
-        Frame::Ptr ref_;
-        Frame::Ptr curr_;
-        cv::Ptr<cv::ORB> orb_;
+        VOState state_;  //current VO states
+        Map::Ptr map_;  // map with all frames and map points
+        Frame::Ptr ref_;  // reference frame
+        Frame::Ptr curr_;  //current frame
+        cv::Ptr<cv::ORB> orb_;  // orb detector and computer
         vector<cv::Point3f> pts_3d_ref_;        // 3d points in reference frame
         vector<cv::KeyPoint> keypoints_curr_;    // keypoints in current frame
         Mat descriptors_curr_;  // descriptor in current frame
@@ -30,6 +30,7 @@ namespace slamrgbd {
         SE3 transform_matrix_c_r_estimated_;  // the estimated pose of current frame
         int num_inliers_;        // number of inlier features in icp
         int num_lost_;           // number of lost times
+        double map_point_erase_ratio_;
 
         // parameters
         int num_of_features_;   // number of features

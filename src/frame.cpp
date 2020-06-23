@@ -11,6 +11,7 @@ namespace slamrgbd {
             : id_(id), time_stamp_(time_stamp), transform_matrix_c_w_(transform_matrix_c_w), camera_(camera),
               color_(color), depth_(depth) {}
 
+    // Find the depth of a key_point in the depth image (if the correspondings depth is not detected, find its neighbors.)
     double Frame::FindDepth(const cv::KeyPoint &key_point) {
         int x = cvRound(key_point.pt.x);
         int y = cvRound(key_point.pt.y);

@@ -46,7 +46,7 @@ int main ( int argc, char** argv ) {
 
 
 
-    slamrgbd::Camera::Ptr camera ( new slamrgbd::Camera );
+    slamrgbd::Camera::Ptr camera = make_shared<slamrgbd::Camera>();
 
     // visualization
     cv::viz::Viz3d vis("Visual Odometry");

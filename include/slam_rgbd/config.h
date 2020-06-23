@@ -9,10 +9,13 @@
 namespace slamrgbd {
     class Config {
     private:
-        static shared_ptr<Config> config_;
         cv::FileStorage file_;
+        static Config * config_;
 
         Config()=default;
+        Config(const Config & obj)=delete;
+        Config & operator=(const Config & obj)=delete;
+
     public:
         ~Config();
 

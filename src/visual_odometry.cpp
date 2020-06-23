@@ -10,6 +10,7 @@
 
 #include "slam_rgbd/config.h"
 #include "slam_rgbd/visual_odometry.h"
+#include "slam_rgbd/g2o_types.h"
 
 namespace slamrgbd {
     VisualOdometry::VisualOdometry() : state_(INITIALIZING), ref_(NULL), curr_(NULL), map_(new Map), num_lost_(0), num_inliers_(0) {
@@ -21,6 +22,7 @@ namespace slamrgbd {
         min_inliers_        = Config::get<int> ( "min_inliers" );
         key_frame_min_rot   = Config::get<double> ( "keyframe_rotation" );
         key_frame_min_trans = Config::get<double> ( "keyframe_translation" );
+        map_point_erase_ratio_ = Config::get<double> ("map_point_erase_ratio");
         orb_ = cv::ORB::create ( num_of_features_, scale_factor_, level_pyramid_ );
     }
 
@@ -87,6 +89,7 @@ namespace slamrgbd {
         })->distance;
 
         feature_matches_.clear();
+        // Filter out the "bad" matches
         for (cv::DMatch & m : matches) {
             if (m.distance < max<float>(min_dis * match_ratio_, 30.0)) {
                 feature_matches_.push_back(m);
@@ -118,7 +121,40 @@ namespace slamrgbd {
                 Vector3d( tvec.at<double>(0,0), tvec.at<double>(1,0), tvec.at<double>(2,0))
                 );
 
+        // BA
+        typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 2>> Block;
+        Block::LinearSolverType * linear_solver = new g2o::LinearSolverDense<Block::PoseMatrixType>();
+        Block * solver_ptr = new Block(linear_solver);
+        g2o::OptimizationAlgorithmLevenberg * solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
+        g2o::SparseOptimizer optimizer;
+        optimizer.setAlgorithm(solver);
+
+        g2o::VertexSE3Expmap* pose = new g2o::VertexSE3Expmap();
+        pose->setId(0);
+        pose->setEstimate(g2o::SE3Quat(transform_matrix_c_r_estimated_.rotation_matrix(), transform_matrix_c_r_estimated_.translation()));
+        optimizer.addVertex(pose);
+
+        for (int i = 0; i < num_inliers_; ++i) {
+            int index = inliers.at<int>(i, 0);
+            EdgeProjectXYZ2UVPoseOnly* edge = new EdgeProjectXYZ2UVPoseOnly();
+            edge->setId(i);
+            edge->setVertex(0, pose);
+            edge->camera_ = curr_->GetCamera().get();
+            edge->point_ = Vector3d( pts3d[index].x, pts3d[index].y, pts3d[index].z );
+            edge->setMeasurement( Vector2d(pts2d[index].x, pts2d[index].y) );
+            edge->setInformation( Eigen::Matrix2d::Identity() );
+            optimizer.addEdge(edge);
+        }
+
+        optimizer.initializeOptimization();
+        optimizer.optimize(10);
+
+        transform_matrix_c_r_estimated_ = SE3(
+          pose->estimate().rotation(),
+          pose->estimate().translation());
     }
+
+    // Derive the features with depth information
     void VisualOdometry::SetRef3DPoints() {
         pts_3d_ref_.clear();
         descriptors_ref_ = Mat();
