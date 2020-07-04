@@ -58,11 +58,14 @@ namespace slamrgbd {
         void ComputeDescriptors();
         void FeatureMatching();
         void PoseEstimationPnP();
-        void optimizeMap()
+        void OptimizeMap()
 
         void AddKeyFrame();
+        void AddMapPoints();
         bool CheckEstimatedPose();
         bool CheckKeyFrame();
+
+        double GetViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
 
     };
 
