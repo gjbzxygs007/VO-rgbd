@@ -5,12 +5,14 @@
 #include "slam_rgbd/mappoint.h"
 
 namespace slamrgbd {
-    MapPoint::MapPoint(long id, Vector3d position, Vector3d norm)
-    : id_(id), pos_(position), norm_(norm), observed_times_(0), correct_times_(0) {}
-
     MapPoint::Ptr MapPoint::CreateMapPoint() {
-        static long factory_id = 0;
         return MapPoint::Ptr(new MapPoint(factory_id++, Vector3d(0, 0, 0), Vector3d(0, 0, 0)));
     }
+
+    MapPoint::Ptr MapPoint::CreateMapPoint(const Vector3d & pos_world, const Vector3d & norm, const Mat & descriptor, Frame::Ptr & frame) {
+        return MapPoint::Ptr(new MapPoint(factory_id++, pos_world, norm, frame, descriptor));
+    }
+
+    unsiged long MapPoint::factory_id_ = 0;
 }
 

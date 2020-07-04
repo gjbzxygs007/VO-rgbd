@@ -49,8 +49,17 @@ public:
     virtual void linearizeOplus();
     virtual bool read(istream & in) {}
     virtual bool write(ostream & out) const {}
+    inline void SetCamera(const Camera::Ptr & cam) {
+        camera_ = cam;
+    }
+    inline void SetPoint(double x, double y, double z) {
+        point_ << x, y, z;
+    }
+
+
+private:
     Vector3d point_;
-    Camera * camera_;
+    Camera::Ptr camera_;
 };
 
 

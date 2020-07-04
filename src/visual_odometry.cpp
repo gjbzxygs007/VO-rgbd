@@ -139,8 +139,8 @@ namespace slamrgbd {
             EdgeProjectXYZ2UVPoseOnly* edge = new EdgeProjectXYZ2UVPoseOnly();
             edge->setId(i);
             edge->setVertex(0, pose);
-            edge->camera_ = curr_->GetCamera().get();
-            edge->point_ = Vector3d( pts3d[index].x, pts3d[index].y, pts3d[index].z );
+            edge->SetCamera(curr_->GetCamera());
+            edge->SetPoint( pts3d[index].x, pts3d[index].y, pts3d[index].z );
             edge->setMeasurement( Vector2d(pts2d[index].x, pts2d[index].y) );
             edge->setInformation( Eigen::Matrix2d::Identity() );
             optimizer.addEdge(edge);
