@@ -35,23 +35,23 @@ namespace slamrgbd {
                 map_->InsertKeyFrame(frame);
                 ExtractKeyPoints();
                 ComputeDescriptors();
-                SetRef3DPoints();
+                AddKeyFrame();
                 break;
             }
             case OK:
             {
                 curr_ = frame;
+                curr_->GetTransformation() = ref_->GetTransformation();
                 ExtractKeyPoints();
                 ComputeDescriptors();
                 FeatureMatching();
                 PoseEstimationPnP();
                 if (CheckEstimatedPose() == true) {
-                    curr_->GetTransformation() = transform_matrix_c_r_estimated_ * ref_->GetTransformation();
-                    ref_ = curr_;
-                    SetRef3DPoints();
+                    curr_->GetTransformation() = transform_matrix_c_r_estimated_;
+                    OptimizeMap();
                     num_lost_ = 0;
                     if (CheckKeyFrame() == true) {
-                        AddKeyFrame();
+                        AddKeyFrame(); // Add if it is a key-frame
                     }
                 }
                 else {
@@ -73,39 +73,60 @@ namespace slamrgbd {
     }
 
     void VisualOdometry::ExtractKeyPoints() {
+        boost::timer timer;
         orb_->detect(curr_->GetColor(), keypoints_curr_);
+        cout << "Extract keypoints cost time: " << timer.elapsed() << endl;
     }
 
     void VisualOdometry::ComputeDescriptors() {
+        boost::timer timer;
         orb_->compute(curr_->GetColor(), keypoints_curr_, descriptors_curr_);
+        cout << "Extract keypoints cost time: " << timer.elapsed() << endl;
     }
 
     void VisualOdometry::FeatureMatching() {
+        boost::timer timer;
         vector<cv::DMatch> matches;
-        cv::BFMatcher matcher(cv::NORM_HAMMING);
-        matcher.match(descriptors_ref_, descriptors_curr_, matches);
+        // Find the map points in view
+        Mat desp_map;
+        vector<MapPoint::Ptr> candidates;
+        for (auto & point : map_->AccessMapPoints()) {
+            MapPoint::Ptr & p = point.second;
+            if (curr_->IsInFrame(p->GetPosition())) {
+                p->GetVisibleTimes()++;
+                candidates.push_back(p);
+                desp_map.push_back(p->GetDescriptor());
+            }
+        }
+
+        matcher_flann_.match(desp_map, descriptors_curr_, matches);
         float min_dis = min_element(matches.begin(), matches.end(), [] (const cv::DMatch & m1, const cv::DMatch & m2) {
             return m1.distance < m2.distance;
         })->distance;
-
-        feature_matches_.clear();
-        // Filter out the "bad" matches
+        match_3dpts_.clear();
+        match_2dkp_index_.clear();
         for (cv::DMatch & m : matches) {
             if (m.distance < max<float>(min_dis * match_ratio_, 30.0)) {
-                feature_matches_.push_back(m);
+                match_3dpts_.push_back(candidates[m.queryIdx]);
+                match_2dkp_index_.push_back(m.trainIdx); //index
             }
         }
-        cout << "good matches: " << feature_matches_.size() << endl;
+
+        cout << "Good matches: " << match_3dpts_.size() << endl;
+        cout << "Match cost time: " << timer.elapsed() << endl;
     }
 
     void VisualOdometry::PoseEstimationPnP() {
         vector<cv::Point3f> pts3d;
         vector<cv::Point2f> pts2d;
 
-        for (cv::DMatch m : feature_matches_) {
-            pts3d.push_back(pts_3d_ref_[m.queryIdx]);
-            pts2d.push_back(keypoints_curr_[m.trainIdx].pt);
+        for (int index : match_2dkp_index_) {
+            pts2d.push_back(keypoints_curr_[index].pt);
         }
+        for (MapPoint::Ptr pt : match_3dpts_) {
+            pts3d.push_back(pt->GetPositionCV());
+        }
+
         Mat K = ( cv::Mat_<double>(3,3)<<
                 ref_->GetCamera()->GetFx(), 0, ref_->GetCamera()->GetCx(),
                 0, ref_->GetCamera()->GetFy(), ref_->GetCamera()->GetCy(),
@@ -154,23 +175,25 @@ namespace slamrgbd {
           pose->estimate().translation());
     }
 
-    // Derive the features with depth information
-    void VisualOdometry::SetRef3DPoints() {
-        pts_3d_ref_.clear();
-        descriptors_ref_ = Mat();
-        for (size_t i = 0; i < keypoints_curr_.size(); ++i) {
-            double d = ref_->FindDepth(keypoints_curr_[i]);
-            if (d > 0) {
-                Vector3d p_cam = ref_->GetCamera()->PixelToCamera(Vector2d(keypoints_curr_[i].pt.x, keypoints_curr_[i].pt.y), d);
-                pts_3d_ref_.push_back(cv::Point3f(p_cam(0, 0), p_cam(1, 0), p_cam(2, 0)));
-                descriptors_ref_.push_back(descriptors_curr_.row(i));
+    void VisualOdometry::AddKeyFrame() {
+        if (map_->AccessKeyframes().empty()) {
+            for (int i = 0; i < keypoints_curr_.size(); ++i) {
+                double depth = curr_->FindDepth(keypoints_curr_[i]);
+                if (depth < 0) {
+                    continue;
+                }
+                Vector3d p_world = ref_->GetCamera()->PixelToWorld(Vector2d(keypoints_curr_[i].pt.x, keypoints_curr_[i].pt.y), curr_->GetTransformation());
+                Vector3d  n = p_world - ref_->GetCameraCenter(); // direction of viewing
+                n.normalize();
+                MapPoint::Ptr map_point = MapPoint::CreateMapPoint(p_world, n, descriptors_curr_.row(i).clone(), curr_);
+                map_->InsertMapPoint(map_point);
             }
         }
-    }
 
-    void VisualOdometry::AddKeyFrame() {
+
         cout<<"adding a key-frame"<<endl;
         map_->InsertKeyFrame ( curr_ );
+        ref_ = curr_;
     }
     bool VisualOdometry::CheckEstimatedPose() {
         if (num_inliers_ < min_inliers_) {
@@ -192,6 +215,30 @@ namespace slamrgbd {
             return true;
         }
         return false;
+    }
+
+    void VisualOdometry::AddMapPoints() {
+        vector<bool> matched(keypoints_curr_.size(), false);
+        for (int index : match_2dkp_index_) {
+            matched[index] = true;
+        }
+        for (int i = 0; i < keypoints_curr_.size(); ++i) {
+            if (!matched[i]) {
+                continue;
+            }
+            double depth = ref_->FindDepth(keypoints_curr_[i]);
+            if (depth < 0) {
+                continue;
+            }
+            Vector3d p_world = ref_->GetCamera()->PixelToWorld(Vector2d(keypoints_curr_[i].pt.x, keypoints_curr_[i].pt.y), curr_->GetTransformation(), depth);
+            Vector3d n = p_world - ref_->GetCameraCenter();
+            n.normalize();
+            MapPoint::Ptr map_point = MapPoint::CreateMapPoint(
+                    p_world, n, descriptors_curr_.row(i).clone(), curr_);
+            map_->InsertMapPoint(map_point);
+
+
+        }
     }
 }
 

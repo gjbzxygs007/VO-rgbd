@@ -19,7 +19,7 @@ namespace slamrgbd {
     private:
         VOState state_;  //current VO states
         Map::Ptr map_;  // map with all frames and map points
-        Frame::Ptr ref_;  // reference frame
+        Frame::Ptr ref_;  // reference key-frame
         Frame::Ptr curr_;  //current frame
         cv::Ptr<cv::ORB> orb_;  // orb detector and computer
         vector<cv::KeyPoint> keypoints_curr_;    // keypoints in current frame
@@ -58,7 +58,7 @@ namespace slamrgbd {
         void ComputeDescriptors();
         void FeatureMatching();
         void PoseEstimationPnP();
-        void OptimizeMap()
+        void OptimizeMap();
 
         void AddKeyFrame();
         void AddMapPoints();

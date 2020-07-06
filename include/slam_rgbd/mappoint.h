@@ -29,10 +29,14 @@ namespace slamrgbd {
             observed_frames_.push_back(frame);
         }
 
+        inline Vector3d & GetPosition() {return pos_; }
         inline cv::Point3f GetPositionCV() const {
             return cv::Point3f(pos_(0, 0), pos_(1, 0), pos_(2, 0));
         }
-        inline unsigned long GetId() {return id_;}
+        inline unsigned long GetId() const {return id_;}
+        inline int & GetMatchedTimes() {return matched_times_; }
+        inline int & GetVisibleTimes() {return visible_times_; }
+        inline Mat & GetDescriptor() {return descriptor_; }
 
         static MapPoint::Ptr CreateMapPoint();
         static MapPoint::Ptr CreateMapPoint(const Vector3d & pos_world, const Vector3d & norm_, const Mat descriptor, Frame::Ptr frame);
