@@ -13,7 +13,7 @@
 #include "slam_rgbd/g2o_types.h"
 
 namespace slamrgbd {
-    VisualOdometry::VisualOdometry() : state_(INITIALIZING), ref_(NULL), curr_(NULL), map_(new Map), num_lost_(0), num_inliers_(0) {
+    VisualOdometry::VisualOdometry() : state_(INITIALIZING), ref_(NULL), curr_(NULL), map_(new Map), num_lost_(0), num_inliers_(0), matcher_flann_(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2)) {
         num_of_features_    = Config::get<int> ( "number_of_features" );
         scale_factor_       = Config::get<double> ( "scale_factor" );
         level_pyramid_      = Config::get<int> ( "level_pyramid" );
@@ -31,8 +31,7 @@ namespace slamrgbd {
             case INITIALIZING:
             {
                 state_ = OK;
-                curr_ = ref_ = frame;
-                map_->InsertKeyFrame(frame);
+                ref_ = curr_ = frame;
                 ExtractKeyPoints();
                 ComputeDescriptors();
                 AddKeyFrame();
@@ -75,13 +74,13 @@ namespace slamrgbd {
     void VisualOdometry::ExtractKeyPoints() {
         boost::timer timer;
         orb_->detect(curr_->GetColor(), keypoints_curr_);
-        cout << "Extract keypoints cost time: " << timer.elapsed() << endl;
+        cout << "Extracting keypoints costs time: " << timer.elapsed() << endl;
     }
 
     void VisualOdometry::ComputeDescriptors() {
         boost::timer timer;
         orb_->compute(curr_->GetColor(), keypoints_curr_, descriptors_curr_);
-        cout << "Extract keypoints cost time: " << timer.elapsed() << endl;
+        cout << "Computing descriptors costs time: " << timer.elapsed() << endl;
     }
 
     void VisualOdometry::FeatureMatching() {
@@ -99,6 +98,8 @@ namespace slamrgbd {
             }
         }
 
+        cout << desp_map.size() << endl;
+        cout << descriptors_curr_.size() << endl;
         matcher_flann_.match(desp_map, descriptors_curr_, matches);
         float min_dis = min_element(matches.begin(), matches.end(), [] (const cv::DMatch & m1, const cv::DMatch & m2) {
             return m1.distance < m2.distance;
@@ -190,8 +191,7 @@ namespace slamrgbd {
             }
         }
 
-
-        cout<<"adding a key-frame"<<endl;
+        cout<<"Adding a key-frame"<<endl;
         map_->InsertKeyFrame ( curr_ );
         ref_ = curr_;
     }
@@ -239,6 +239,48 @@ namespace slamrgbd {
 
 
         }
+    }
+
+    void VisualOdometry::OptimizeMap() {
+        for (auto itr = map_->AccessMapPoints().begin(); itr != map_->AccessMapPoints().end();) {
+            if (curr_->IsInFrame(itr->second->GetPosition()) == false) {
+                itr = map_->AccessMapPoints().erase(itr);
+                continue;
+            }
+            // Erase if the feature gets rarely matched
+            float match_ratio = float(itr->second->GetMatchedTimes()) / itr->second->GetVisibleTimes();
+            if (match_ratio < map_point_erase_ratio_) {
+                itr = map_->AccessMapPoints().erase(itr);
+                continue;
+            }
+            double angle = GetViewAngle(curr_, itr->second);
+            if (angle > M_PI / 6) {
+                itr = map_->AccessMapPoints().erase(itr);
+                continue;
+            }
+            if (itr->second->IsGood() == false) {
+
+            }
+            itr++;
+        }
+
+        if (match_2dkp_index_.size() < 100) {
+            AddMapPoints();
+        }
+
+        if (map_->AccessMapPoints().size() > 1000) {
+            map_point_erase_ratio_ += 0.05;
+        }
+        else {
+            map_point_erase_ratio_ = 0.1;
+        }
+        cout << "The number of map points is " << map_->AccessMapPoints().size() << endl;
+    }
+
+    double VisualOdometry::GetViewAngle(Frame::Ptr frame, MapPoint::Ptr point) {
+        Vector3d n = point->GetPosition() - frame->GetCameraCenter();
+        n.normalize();
+        return acos(n.transpose() * point->GetNorm());
     }
 }
 

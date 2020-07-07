@@ -24,7 +24,7 @@ namespace slamrgbd {
     public:
         typedef shared_ptr<MapPoint> Ptr;
         MapPoint() : id_(-1), pos_(Vector3d(0, 0, 0)), norm_(Vector3d(0, 0, 0)), good_(true), visible_times_(0), matched_times_(0) {}
-        MapPoint(unsigned long id, const Vector3d & position, const Vector3d & norm, Frame::Ptr frame, const Mat & descriptor = Mat())
+        MapPoint(unsigned long id, const Vector3d & position, const Vector3d & norm, Frame::Ptr frame = Frame::Ptr(nullptr), const Mat & descriptor = Mat())
         : id_(id), pos_(position), norm_(norm), good_(true), visible_times_(1), matched_times_(1), descriptor_(descriptor) {
             observed_frames_.push_back(frame);
         }
@@ -37,9 +37,11 @@ namespace slamrgbd {
         inline int & GetMatchedTimes() {return matched_times_; }
         inline int & GetVisibleTimes() {return visible_times_; }
         inline Mat & GetDescriptor() {return descriptor_; }
+        inline bool IsGood() {return good_; }
+        inline const Vector3d & GetNorm() {return norm_; }
 
         static MapPoint::Ptr CreateMapPoint();
-        static MapPoint::Ptr CreateMapPoint(const Vector3d & pos_world, const Vector3d & norm_, const Mat descriptor, Frame::Ptr frame);
+        static MapPoint::Ptr CreateMapPoint(const Vector3d & pos_world, const Vector3d & norm_, const Mat & descriptor, Frame::Ptr frame);
     };
     class Frame;
 }

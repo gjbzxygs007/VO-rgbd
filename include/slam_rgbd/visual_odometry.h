@@ -52,6 +52,7 @@ namespace slamrgbd {
         ~VisualOdometry() = default;
         inline VOState GetState() {return state_;}
         bool AddFrame(Frame::Ptr frame);
+        inline Map::Ptr & GetMap() {return map_; }
 
     protected:
         void ExtractKeyPoints();

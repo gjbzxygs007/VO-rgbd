@@ -11,8 +11,8 @@ namespace slamrgbd {
         unsigned long id_;
         double time_stamp_;
         SE3 transform_matrix_c_w_;
-        Camera::Ptr camera_;
         Mat color_, depth_;
+        Camera::Ptr camera_;
 
     public:
         typedef std::shared_ptr <Frame> Ptr;
@@ -25,6 +25,7 @@ namespace slamrgbd {
         inline Mat & GetColor() {return color_; }
         inline Mat & GetDepth() {return depth_; }
         inline Camera::Ptr GetCamera() {return camera_;}
+        inline void SetCamera(Camera::Ptr & camera) {camera_ = camera; }
         inline void SetTime(double t) {time_stamp_ = t; }
 
         double FindDepth(const cv::KeyPoint & key_point);

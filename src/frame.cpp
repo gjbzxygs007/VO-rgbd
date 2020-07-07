@@ -16,6 +16,9 @@ namespace slamrgbd {
         int x = cvRound(key_point.pt.x);
         int y = cvRound(key_point.pt.y);
         ushort d = depth_.ptr<ushort>(y)[x];
+        if (!camera_.get()) {
+            cout << "The camera is not defined!" << endl;
+        }
         if (d != 0) {
             return double(d) / camera_->GetDepthScale();
         } else {
@@ -41,8 +44,12 @@ namespace slamrgbd {
         if (point_c(2, 0) < 0) {
             return false;
         }
-        Vector2d point_p = camera_->WorldToPixel(point_w, transform_matrix_c_w_);
+        Vector2d point_p = camera_->CameraToPixel(point_c);
+        // Todo:
+        // The following doesn't work
+        //  Vector2d point_p = camera_->WorldToPixel(point_c, transform_matrix_c_w_);
         return point_p(0, 0) > 0 && point_p(1, 0) > 0 && point_p(0, 0) < color_.cols && point_p(1, 0) < color_.rows;
+
     }
 
     Frame::Ptr Frame::CreateFrame() {

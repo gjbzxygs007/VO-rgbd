@@ -7,6 +7,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/viz.hpp>
+#include <opencv2/opencv.hpp>
 
 #include "slam_rgbd/config.h"
 #include "slam_rgbd/visual_odometry.h"
@@ -18,15 +19,15 @@ int main ( int argc, char** argv ) {
     }
 
     slamrgbd::Config::SetParameterFile(argv[1]);
-    slamrgbd::VisualOdometry::Ptr vo ( new slamrgbd::VisualOdometry() );
+    slamrgbd::VisualOdometry::Ptr vo(new slamrgbd::VisualOdometry());
 
 
 
     string dataset_dir = slamrgbd::Config::get<string>("dataset_dir");
     cout << "dataset: " << dataset_dir << endl;
-    ifstream fin ( dataset_dir+"/associate.txt" );
+    ifstream fin(dataset_dir+"/associate.txt");
     if (!fin) {
-        cout<<"Please generate the associate file called associate.txt!"<<endl;
+        cout << "Please generate the associate file called associate.txt!" << endl;
         return 1;
     }
 
@@ -69,14 +70,14 @@ int main ( int argc, char** argv ) {
             break; //break if the image is not read
         slamrgbd::Frame::Ptr pFrame = slamrgbd::Frame::CreateFrame();
 
-        pFrame->GetCamera() = camera;
+        pFrame->SetCamera(camera);
         pFrame->GetColor() = color;
         pFrame->GetDepth() = depth;
         pFrame->SetTime(rgb_times[i]);
 
 
         boost::timer timer;
-        vo->AddFrame ( pFrame );
+        vo->AddFrame(pFrame);
         cout<<"VO costs time: "<<timer.elapsed()<<endl;
 
         if ( vo->GetState() == slamrgbd::VisualOdometry::LOST )
@@ -94,13 +95,20 @@ int main ( int argc, char** argv ) {
                         Tcw.translation()(0,0), Tcw.translation()(1,0), Tcw.translation()(2,0)
                 )
         );
-
-        cv::imshow("image", color );
-        cv::waitKey(2);
+        Mat img_show = color.clone();
+        for (auto & point : vo->GetMap()->AccessMapPoints()) {
+            Vector2d pixel = pFrame->GetCamera()->CameraToPixel(pFrame->GetCamera()->WorldToCamera(point.second->GetPosition(), pFrame->GetTransformation()));
+            cv::circle(img_show, cv::Point2f(pixel(0,0), pixel(1,0)), 5, cv::Scalar(0, 255, 0), 2);
+        }
+        cout << "Final Map size: " << vo->GetMap()->AccessMapPoints().size() << endl;
+        cv::imshow("image", img_show);
+        cv::waitKey();
 
         vis.setWidgetPose( "Camera", M);
         vis.spinOnce(1, false);
     }
+
+
 
     return 0;
 }
