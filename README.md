@@ -1,2 +1,2 @@
 # SLAM-rgbd
-Visual Odometry with Local Maps
+Visual odometry with local maps
