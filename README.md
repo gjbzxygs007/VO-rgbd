@@ -1,2 +1,2 @@
 # SLAM-rgbd
-SLAM with RGBD camera
+Visual Odometry with Local Maps
